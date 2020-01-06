@@ -17,7 +17,7 @@ public:
 	std::vector<int> dims();
 	Matrix T();
 	double sum();
-	void randomise(const double& a, const double& b);
+	void randomise(const double& mean, const double& range);
 
 	Matrix& operator=(const Matrix& other);
 

@@ -63,7 +63,7 @@ Matrix::~Matrix() {
 
 std::vector<int> Matrix::dims() {
 
-	return std::vector<int>(r, c);
+	return std::vector<int>({r, c});
 }
 
 Matrix Matrix::T() {
@@ -102,11 +102,11 @@ double Matrix::sum() {
 	return temp;
 }
 
-void Matrix::randomise(const double& a, const double& b) {
+void Matrix::randomise(const double& mean, const double& range) {
 
 	for(int i = 0; i < l; ++i) {
 
-		mp[i] = (double)std::rand() / RAND_MAX + a * (b-a);
+		mp[i] = (double)std::rand() / RAND_MAX * range + mean - range/2;
 	}
 }
 
@@ -286,9 +286,7 @@ Matrix Matrix::for_each(double func(double&)) {
 
 double& Matrix::operator()(const int& i, const int& j) {
 
-	double& temp = mp[i*c + j];
-
-	return temp;
+	return mp[i*c + j];
 }
 
 Matrix Matrix::slice(const int& r1, const int& c1, const int& r2, const int& c2) {
