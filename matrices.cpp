@@ -1,141 +1,138 @@
 #include "matrices.h"
+#include <ctime>
+#include <cstdlib>
+#include <stdexcept>
 
-Matrix::Matrix() {};
+Matrix::Matrix() : 
+	r(0), 
+	c(0), 
+	l(0) {
 
-Matrix::Matrix(std::vector<std::vector<double>> vec) {
+	mp = new double[0];
+};
 
-	for(auto iter = vec.begin(); iter != vec.end(); ++iter) {
+Matrix::Matrix(const int& r, const int& c) : 
+	r(r), 
+	c(c), 
+	l(r*c) {
 
-		this->push_back(*iter);
+	if(r < 0 || c < 0) {
+
+		throw std::invalid_argument("Both args must be positive (number of rows and number of columns in matrix)");
 	}
+
+	mp = new double[l];
 }
 
 Matrix::Matrix(std::initializer_list<std::vector<double>> init_list) {
 
-	for(auto iter = init_list.begin(); iter != init_list.end(); ++iter) {
+	r = init_list.end() - init_list.begin();
+	c = init_list.begin() -> size();
+	l = r*c;
 
-		this->push_back(*iter);
+	// intialise iterator and get dimensions of matrix
+	auto iter = init_list.begin();
+
+	// allocate array
+	mp = new double[l];
+
+	// populate array
+	for(int i = 0; i < r; ++i, ++iter) {
+
+		for(int j = 0; j < c; ++j) {
+
+			mp[i*c + j] = (*iter)[j];
+		}
 	}
 }
 
-void Matrix::display() {
+Matrix::Matrix(const Matrix& M) : 
+	r(M.r), 
+	c(M.c), 
+	l(M.l) {
 
-	std::cout << "[";
+	mp = new double[M.l];
 
-	for(auto iter1 = begin(); iter1 != end(); ++iter1) {
-
-		std::cout << "[";
-
-		for(auto iter2 = iter1->begin(); iter2 != iter1->end(); ++iter2) {
-
-			std::cout << *iter2 << ", ";
-		}
-
-		std::cout << "]";
-
-		std::cout << std::endl;
-	}
-
-	std::cout << "]";
+	memcpy(mp, M.mp, sizeof(double) * l);
 }
 
-std::ostream& operator<<(std::ostream& os, const Matrix& m) {
+Matrix::~Matrix() {
 
-	std::vector<int> dims_vector = m.dims();
-
-	os << "[";
-
-	for(int i=0; i < dims_vector[0]; ++i) {
-
-		os << "[";
-
-		for(int j=0; j < dims_vector[1]; ++j) {
-
-			os << m[i][j];
-
-			os << (j != dims_vector[1]-1 ? ", " : "]");
-
-		}
-
-		os << (i != dims_vector[0]-1 ? ",\n " : "]\n");
-	}
-
-	return os;
+	delete[] mp;
 }
 
-Matrix array_mult(const Matrix& m1, const Matrix& m2) {
+std::vector<int> Matrix::dims() {
 
-	Matrix temp;
-
-	for(int i=0; i < m1.size(); i++) {
-
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < m1[i].size(); j++) {
-
-			temp[i].push_back( m1[i][j] * m2[i][j] );
-		}
-	}
-
-	return temp;
-
+	return std::vector<int>({r, c});
 }
 
 Matrix Matrix::T() {
 
-	Matrix temp;
-	std::vector<int> dims_vector = dims();
+	Matrix temp(c, r);
 
-	for(int i=0; i < dims_vector[1]; i++) {
+	int i=0;
+	int j=0;
 
-		std::vector<double> row;
+	for(int t=0; t < l; ++t) {
 
-		for(int j=0; j < dims_vector[0]; j++) {
+		temp.mp[t] = mp[j*c + i];
 
-			row.push_back( (*this)[j][i] );
+		// update indices
+		++j;
+
+		if(j==temp.c) {
+
+			++i;
+			j = 0;
 		}
-
-		temp.push_back(row);
 	}
 
 	return temp;
 }
 
-double Matrix::det() {
+double Matrix::sum() {
 
-	Matrix &t = *this;
+	double temp = 0;
 
-	double d1 = t[0][0] * ( t[1][1]*t[2][2] - t[1][2]*t[2][1]);
-	double d2 = t[0][1] * ( t[1][0]*t[2][2] - t[1][2]*t[2][0]);
-	double d3 = t[0][2] * ( t[1][0]*t[2][1] - t[1][1]*t[2][0]);
+	for(int t=0; t<l; ++t) {
 
-	return d1 - d2 + d3;
-}
-
-std::vector<int> Matrix::dims() const {
-
-	std::vector<int> temp;
-
-	temp.push_back( size() );
-	temp.push_back( (*this)[0].size() );
+		temp += mp[t];
+	}
 
 	return temp;
 }
 
+void Matrix::randomise(const double& mean, const double& range) {
+
+	for(int i = 0; i < l; ++i) {
+
+		mp[i] = (double)std::rand() / RAND_MAX * range + mean - range/2;
+	}
+}
+
+Matrix& Matrix::operator=(const Matrix& other) {
+
+	r = other.r;
+	c = other.c;
+	l = r*c;
+
+	delete[] mp;
+
+	mp = new double[l];
+
+	memcpy(mp, other.mp, sizeof(double) * l);
+
+	return *this;
+}
+
+
 Matrix Matrix::operator+(const Matrix& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] + other[i][j] );
-		}
+		temp.mp[i] = mp[i] + other.mp[i];
 	}
 
 	return temp;
@@ -143,43 +140,48 @@ Matrix Matrix::operator+(const Matrix& other) {
 
 Matrix Matrix::operator-(const Matrix& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] - other[i][j] );
-		}
+		temp.mp[i] = mp[i] - other.mp[i];
 	}
 
 	return temp;
 }
 
+
 Matrix Matrix::operator*(const Matrix& other) {
 
-	Matrix temp;
+	// initialise result matrix
+	Matrix temp(r, other.c);
 
-	for(int i=0; i < size(); i++) {
+	// indices of entry in result matrix
+	int i = 0;
+	int j = 0;
 
-		std::vector<double> in_temp;
+	for(int t=0; t < temp.l; ++t) {
 
-		for(int j=0; j < other[0].size(); j++) {
+		// sum for entry in result matrix
+		double sum = 0;
 
-			double sum = 0;
+		// calculate entry
+		for(int k=0; k < other.r; k++) {
 
-			for(int k=0; k < other.size(); k++) {
-
-				sum += (*this)[i][k] * other[k][j];
-			}
-
-			in_temp.push_back(sum);
+			sum += mp[i*c + k] * other.mp[k*other.c + j];
 		}
 
-		temp.push_back(in_temp);
+		// assign entry to value of sum
+		temp.mp[t] = sum;
+
+		// update indices
+		++j;
+
+		if(j==temp.c) {
+
+			++i;
+			j = 0;
+		}
 	}
 
 	return temp;
@@ -187,17 +189,11 @@ Matrix Matrix::operator*(const Matrix& other) {
 
 Matrix Matrix::operator+(const double& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] + other );
-		}
+		temp.mp[i] = mp[i] + other;
 	}
 
 	return temp;
@@ -205,17 +201,11 @@ Matrix Matrix::operator+(const double& other) {
 
 Matrix Matrix::operator-(const double& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] - other );
-		}
+		temp.mp[i] = mp[i] - other;
 	}
 
 	return temp;
@@ -223,17 +213,11 @@ Matrix Matrix::operator-(const double& other) {
 
 Matrix Matrix::operator*(const double& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] * other );
-		}
+		temp.mp[i] = mp[i] * other;
 	}
 
 	return temp;
@@ -241,17 +225,11 @@ Matrix Matrix::operator*(const double& other) {
 
 Matrix Matrix::operator/(const double& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int i=0; i<l; ++i) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] / other );
-		}
+		temp.mp[i] = mp[i] / other;
 	}
 
 	return temp;
@@ -259,17 +237,11 @@ Matrix Matrix::operator/(const double& other) {
 
 Matrix Matrix::operator&&(const Matrix& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int t=0; t < l; ++t) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back( (*this)[i][j] && other[i][j] );
-		}
+		temp.mp[t] = mp[t] && other.mp[t];
 	}
 
 	return temp;
@@ -277,41 +249,227 @@ Matrix Matrix::operator&&(const Matrix& other) {
 
 Matrix Matrix::operator||(const Matrix& other) {
 
-	Matrix temp;
+	Matrix temp(r, c);
 
-	for(int i=0; i < size(); i++) {
+	for(int t=0; t < l; ++t) {
 
-		std::vector<double> emp;
-		temp.push_back(emp);
-
-		for(int j=0; j < (*this)[i].size(); j++) {
-
-			temp[i].push_back((*this)[i][j] || other[i][j]);
-		}
+		temp.mp[t] = mp[t] || other.mp[t];
 	}
 
 	return temp;
 }
 
 Matrix Matrix::operator!() {
+	
+	Matrix temp(r, c);
 
-	Matrix temp;
+	for(int t=0; t < l; ++t) {
 
-	for(int i=0; i < size(); i++) {
+		temp.mp[t] = !mp[t];
+	}
 
-		std::vector<double> emp;
-		temp.push_back(emp);
+	return temp;
+}
 
-		for(int j=0; j < (*this)[i].size(); j++) {
 
-			temp[i].push_back( !(*this)[i][j] );
+Matrix Matrix::for_each(double func(double&)) {
+
+	Matrix temp(r, c);
+
+	for(int t=0; t<l; ++t) {
+
+		temp.mp[t] = func(mp[t]);
+	}
+
+	return temp;
+}
+
+double& Matrix::operator()(const int& i, const int& j) {
+
+	return mp[i*c + j];
+}
+
+Matrix Matrix::slice(const int& r1, const int& c1, const int& r2, const int& c2) {
+
+	if(r2 < r1 || c2 < c1) {
+
+		throw std::invalid_argument("index of bottom left corner (2nd 2 args) must be greater than index of first corner (first 2 args)");
+	}
+
+	if(r1 > r || c1 > c) {
+
+		throw std::invalid_argument("indices must all be inside matrix");
+	}
+
+	Matrix temp(r2-r1, c2-c1);
+
+	int i = 0;
+	int j = 0;
+
+	for(int t=0; t < temp.l; ++t) {
+
+		temp.mp[t] = mp[(i + r1) * c + (j + c1)];
+
+		// update indices
+		++j;
+
+		if(j==temp.c) {
+
+			++i;
+			j = 0;
 		}
 	}
 
 	return temp;
 }
 
-double Matrix::operator()(const int& i1, const int& i2) {
 
-	return (*this)[i1][i2];
+std::ostream& operator<<(std::ostream& os, const Matrix& M) {
+
+	os << "[[";
+
+	for(int i=0; i < M.l-1; ++i) {
+
+		os << M.mp[i];
+
+		os << ( (i+1) % M.c != 0 ? ", " : "],\n [");
+	}
+
+	os << M.mp[M.l-1];
+
+	os << "]]";
+
+	return os;
+}
+
+Matrix array_mult(const Matrix& M1, const Matrix& M2) {
+
+	Matrix temp(M1.r, M1.c);
+
+	for(int t=0; t < M1.l; ++t) {
+
+		temp.mp[t] = M1.mp[t] * M2.mp[t];
+	}
+
+	return temp;
+}
+
+Matrix join(const Matrix& M1, const Matrix& M2, const int& axis) {
+
+	int r, c;
+
+	if(axis == 0) {
+		if(M1.c != M2.c) {
+
+			throw std::invalid_argument("Matrices should have identical number of columns");
+		}
+
+		c = M1.c;
+		r = M1.r + M2.r;
+	}
+
+	else if(axis == 1) {
+		if(M1.r != M2.r) {
+
+			throw std::invalid_argument("Matrices should have identical number of rows");
+		}
+
+		c = M1.c + M2.c;
+		r = M1.r;
+	}
+
+	else {
+		throw std::invalid_argument("axis must be equal to 0 or 1");
+	}
+
+	Matrix temp(r, c);
+
+	int cr = -1; // current row
+
+	for(int t=0; t < M1.l; ++t) {
+
+		if(t % M1.c == 0) {
+
+			++cr;
+		}
+
+		temp.mp[t + cr*M1.c] = M1.mp[t];
+
+	}
+
+	cr = -1; // current row
+
+	for(int t=0; t < M2.l; ++t) {
+
+		if(t % M2.c == 0) {
+
+			++cr;
+		}
+
+		temp.mp[t + cr*(M2.c - 1) + M1.c] = M2.mp[t];
+
+	}
+
+	return temp;
+}
+
+Matrix join(const std::vector<Matrix*>& Ms, const int& axis) {
+
+	int r = 0;
+	int c = 0;
+
+	if(axis == 0) {
+
+		for(auto X : Ms) {
+
+			if(X->l != Ms[0]->l) {
+				throw std::invalid_argument("Matrices should have identical number of columns");
+			}
+
+			r += X->r;
+		}
+
+		c = Ms[0]->c;
+	}
+
+	else if(axis == 1) {
+
+		for(auto X : Ms) {
+			
+			if(X->l != Ms[0]->l) {
+				throw std::invalid_argument("Matrices should have identical number of columns");
+			}
+
+			c += X->c;
+		}
+
+		r = Ms[0]->r;
+	}
+
+	else {
+		throw std::invalid_argument("axis must be equal to 0 or 1");
+	}
+
+	Matrix temp(r, c);
+
+	int c_sum = 0; // sum of columns for offset in array
+
+	for(auto X : Ms) {
+
+		int cr = -1; // current row
+
+		for(int t=0; t < X->l; ++t) {
+
+			if(t % X->c == 0) {
+
+				++cr;
+			}
+
+			temp.mp[t + cr*(temp.c - 1) + c_sum] = X->mp[t];
+		}
+
+		c_sum += X->c;
+	}
+
+	return temp;
 }

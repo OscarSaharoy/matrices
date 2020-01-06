@@ -1,22 +1,25 @@
-
-#include <vector>
-#include <initializer_list>
 #include <iostream>
+#include <vector>
 
-class Matrix: public std::vector<std::vector<double>> {
+class Matrix {
+
 public:
 
 	Matrix();
-	Matrix(std::vector<std::vector<double>>);
+	Matrix(const int& r, const int& c);
 	Matrix(std::initializer_list<std::vector<double>> init_list);
+	Matrix(const Matrix& M);
 
-	void display();
-	friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
-	friend Matrix array_mult(const Matrix& m1, const Matrix& m2);
+	~Matrix();
 
+	// todo: det, inv
+
+	std::vector<int> dims();
 	Matrix T();
-	double det();
-	std::vector<int> dims() const;
+	double sum();
+	void randomise(const double& mean, const double& range);
+
+	Matrix& operator=(const Matrix& other);
 
 	Matrix operator+(const Matrix& other);
 	Matrix operator-(const Matrix& other);
@@ -31,5 +34,17 @@ public:
 	Matrix operator||(const Matrix& other);
 	Matrix operator!();
 
-	double operator()(const int& i1, const int& i2);
+	Matrix for_each(double func(double&));
+
+	double& operator()(const int& i, const int& j);
+	Matrix slice(const int& r1, const int& c1, const int& r2, const int& c2);
+
+	friend std::ostream& operator<<(std::ostream& os, const Matrix& M);
+	friend Matrix array_mult(const Matrix& M1, const Matrix& M2);
+	friend Matrix join(const Matrix& M1, const Matrix& M2, const int& axis);
+
+	double* mp; // pointer to matrix array
+	int r;      // number of rows
+	int c;      // number of columns
+	int l;      // length of array r*c
 };

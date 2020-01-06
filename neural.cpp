@@ -1,4 +1,4 @@
-#include "matrices_1D.cpp"
+#include "matrices.cpp"
 #include <cmath>
 #include <vector>
 
@@ -76,6 +76,8 @@ int main() {
 		W2 = W2 - dW2 * lr;
 		W1 = W1 - dW1 * lr;
 	}
+
+	std::cout << "Training Results\n" << std::endl;
 
 	for(int i = 0; i < setlen; ++i) {
 
