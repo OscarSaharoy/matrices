@@ -92,5 +92,4 @@ int main() {
 		std::cout << "Input: \n" << I1 << std::endl;
 		std::cout << "Output : \n" << O1 << std::endl << std::endl;
 	}
-
 }
