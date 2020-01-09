@@ -7,7 +7,7 @@ public:
 
 	Matrix();
 	Matrix(const int& r, const int& c);
-	Matrix(std::initializer_list<std::vector<double>> init_list);
+	Matrix(std::initializer_list<std::initializer_list<double>> init_list);
 	Matrix(const Matrix& M);
 
 	~Matrix();
@@ -40,6 +40,7 @@ public:
 	Matrix slice(const int& r1, const int& c1, const int& r2, const int& c2);
 
 	friend std::ostream& operator<<(std::ostream& os, const Matrix& M);
+	friend Matrix operator*(const double& d, const Matrix& M);
 	friend Matrix array_mult(const Matrix& M1, const Matrix& M2);
 	friend Matrix join(const Matrix& M1, const Matrix& M2, const int& axis);
 

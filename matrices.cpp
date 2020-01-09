@@ -24,24 +24,32 @@ Matrix::Matrix(const int& r, const int& c) :
 	mp = new double[l];
 }
 
-Matrix::Matrix(std::initializer_list<std::vector<double>> init_list) {
+Matrix::Matrix(std::initializer_list<std::initializer_list<double>> init_list) {
 
+	// set dimensions of matrix
 	r = init_list.end() - init_list.begin();
 	c = init_list.begin() -> size();
 	l = r*c;
 
-	// intialise iterator and get dimensions of matrix
-	auto iter = init_list.begin();
+	// intialise iterators
+	auto iter1 = init_list.begin();
+	auto iter2 = (*iter1).begin();
+	auto end2  = (*iter1).end();
 
 	// allocate array
 	mp = new double[l];
 
-	// populate array
-	for(int i = 0; i < r; ++i, ++iter) {
+	for(int t = 0; t < l; ++t) {
 
-		for(int j = 0; j < c; ++j) {
+		mp[t] = *iter2;
 
-			mp[i*c + j] = (*iter)[j];
+		++iter2;
+
+		if(iter2 == end2) {
+
+			++iter1;
+			iter2 = (*iter1).begin();
+			end2  = (*iter1).end();
 		}
 	}
 }
@@ -152,6 +160,11 @@ Matrix Matrix::operator-(const Matrix& other) {
 
 
 Matrix Matrix::operator*(const Matrix& other) {
+
+	if(c != other.r) {
+
+		throw std::invalid_argument("Dimensions invalid for matrix multiply.");
+	}
 
 	// initialise result matrix
 	Matrix temp(r, other.c);
@@ -342,7 +355,24 @@ std::ostream& operator<<(std::ostream& os, const Matrix& M) {
 	return os;
 }
 
+Matrix operator*(const double& d, const Matrix& M) {
+
+	Matrix temp(M.r, M.c);
+
+	for(int i = 0; i < M.l; ++i) {
+
+		temp.mp[i] = M.mp[i] * d;
+	}
+
+	return temp;
+}
+
 Matrix array_mult(const Matrix& M1, const Matrix& M2) {
+
+	if(M1.c != M2.c || M1.r != M2.r) {
+
+		throw std::invalid_argument("Dimensions invalid for array multiply.");
+	}
 
 	Matrix temp(M1.r, M1.c);
 
