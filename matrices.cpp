@@ -87,13 +87,15 @@ Matrix::~Matrix() {
 }
 
 
-std::vector<int> Matrix::dims() {
+Matrix Matrix::dims() const {
 
-	// return vector containing dimensions of matrix as (rows, columns)
-	return std::vector<int>({r, c});
+	// return matrix containing dimensions of matrix as [[   rows], 
+	//													 [columns]]
+
+	return Matrix( {{(double)r}, {(double)c}} );
 }
 
-Matrix Matrix::T() {
+Matrix Matrix::T() const {
 
 	// returns transposed matrix
 
@@ -122,7 +124,7 @@ Matrix Matrix::T() {
 	return temp;
 }
 
-double Matrix::det() {
+double Matrix::det() const {
 
 	// find the determinant of matrix - must be square
 
@@ -144,7 +146,7 @@ double Matrix::det() {
 	return temp;
 }
 
-Matrix Matrix::inv() {
+Matrix Matrix::inv() const {
 
 	// invert matrix - square matrices only
 	Matrix temp(r, c);
@@ -170,7 +172,7 @@ Matrix Matrix::inv() {
 	return temp;
 }
 
-Matrix Matrix::normalised() {
+Matrix Matrix::normalised() const {
 
 	Matrix temp(r, c);
 
@@ -184,23 +186,18 @@ Matrix Matrix::normalised() {
 	return temp;
 }
 
-Matrix Matrix::for_each(double func(double&)) {
+void Matrix::for_each(double func(double&)) {
 
 	// applies func to each element in matrix
-
-	// create result matrix
-	Matrix temp(r, c);
 
 	for(int t=0; t<l; ++t) {
 
 		// set each element in the oputput matrix as that of the original matrix with func applied
-		temp.mp[t] = func(mp[t]);
+		mp[t] = func(mp[t]);
 	}
-
-	return temp;
 }
 
-Matrix Matrix::squared() {
+Matrix Matrix::squared() const {
 
 	// square each element in the matrix
 
@@ -216,7 +213,7 @@ Matrix Matrix::squared() {
 	return temp;
 }
 
-Matrix Matrix::sqrt() {
+Matrix Matrix::sqrt() const {
 
 	// square root each element in the matrix
 
@@ -232,7 +229,7 @@ Matrix Matrix::sqrt() {
 	return temp;
 }
 
-double Matrix::sum() {
+double Matrix::sum() const {
 
 	// return the sum of all the elements in the matrix
 
@@ -248,7 +245,7 @@ double Matrix::sum() {
 	return temp;
 }
 
-double Matrix::magnitude() {
+double Matrix::magnitude() const {
 
 	double temp = 0;
 
@@ -266,6 +263,15 @@ void Matrix::randomise(const double& mean, const double& range) {
 
 		// set each element to a random float with given mean and range using cstdlib random function 
 		mp[i] = (double)std::rand() / RAND_MAX * range + mean - range/2;
+	}
+}
+
+void Matrix::identity() {
+
+	for(int i = 0; i < l; ++i) {
+
+		// set each element to 1 or 0 depending on position
+		mp[i] = i%c == i/r ? 1 : 0;
 	}
 }
 
@@ -290,7 +296,7 @@ Matrix& Matrix::operator=(const Matrix& other) {
 }
 
 
-Matrix Matrix::operator+(const Matrix& other) {
+Matrix Matrix::operator+(const Matrix& other) const {
 
 	// add 2 matrices element wise
 
@@ -306,7 +312,7 @@ Matrix Matrix::operator+(const Matrix& other) {
 	return temp;
 }
 
-Matrix Matrix::operator-(const Matrix& other) {
+Matrix Matrix::operator-(const Matrix& other) const {
 
 	// subtract 2 matrices element wise
 
@@ -323,7 +329,7 @@ Matrix Matrix::operator-(const Matrix& other) {
 }
 
 
-Matrix Matrix::operator*(const Matrix& other) {
+Matrix Matrix::operator*(const Matrix& other) const {
 
 	// check dimensons are valid for matrix multiply
 	if(c != other.r) {
@@ -365,7 +371,7 @@ Matrix Matrix::operator*(const Matrix& other) {
 	return temp;
 }
 
-Matrix Matrix::operator+(const double& other) {
+Matrix Matrix::operator+(const double& other) const {
 
 	Matrix temp(r, c);
 
@@ -377,7 +383,7 @@ Matrix Matrix::operator+(const double& other) {
 	return temp;
 }
 
-Matrix Matrix::operator-(const double& other) {
+Matrix Matrix::operator-(const double& other) const {
 
 	Matrix temp(r, c);
 
@@ -389,7 +395,7 @@ Matrix Matrix::operator-(const double& other) {
 	return temp;
 }
 
-Matrix Matrix::operator*(const double& other) {
+Matrix Matrix::operator*(const double& other) const {
 
 	Matrix temp(r, c);
 
@@ -401,7 +407,7 @@ Matrix Matrix::operator*(const double& other) {
 	return temp;
 }
 
-Matrix Matrix::operator/(const double& other) {
+Matrix Matrix::operator/(const double& other) const {
 
 	Matrix temp(r, c);
 
@@ -413,7 +419,7 @@ Matrix Matrix::operator/(const double& other) {
 	return temp;
 }
 
-Matrix Matrix::operator&&(const Matrix& other) {
+Matrix Matrix::operator&&(const Matrix& other) const {
 
 	Matrix temp(r, c);
 
@@ -425,7 +431,7 @@ Matrix Matrix::operator&&(const Matrix& other) {
 	return temp;
 }
 
-Matrix Matrix::operator||(const Matrix& other) {
+Matrix Matrix::operator||(const Matrix& other) const {
 
 	Matrix temp(r, c);
 
@@ -437,7 +443,7 @@ Matrix Matrix::operator||(const Matrix& other) {
 	return temp;
 }
 
-Matrix Matrix::operator!() {
+Matrix Matrix::operator!() const {
 	
 	Matrix temp(r, c);
 
@@ -467,13 +473,13 @@ void Matrix::operator-=(const Matrix& other) {
 
 void Matrix::operator*=(const Matrix& other) {
 
-	if(c != other.r) {
+	if(r != other.c) {
 
 		throw std::invalid_argument("Dimensions invalid for matrix multiply.");
 	}
 
 	// initialise result array
-	Matrix temp(r, other.c);
+	Matrix temp(other.r, c);
 
 	// indices of entry in result matrix
 	int i = 0;
@@ -485,9 +491,9 @@ void Matrix::operator*=(const Matrix& other) {
 		double sum = 0;
 
 		// calculate entry
-		for(int k=0; k < other.r; k++) {
+		for(int k=0; k < r; k++) {
 
-			sum += mp[i*c + k] * other.mp[k*other.c + j];
+			sum += other.mp[i*other.c + k] * mp[k*c + j];
 		}
 
 		// assign entry to value of sum
@@ -543,6 +549,12 @@ double& Matrix::operator()(const int& i, const int& j) {
 
 	// return reference to element at index i, j
 	return mp[i*c + j];
+}
+
+double& Matrix::operator[](const int& t) {
+
+	// return reference to element at index t
+	return mp[t];
 }
 
 Matrix Matrix::slice(const int& r1, const int& c1, const int& r2, const int& c2) const {
@@ -702,128 +714,34 @@ Matrix array_div(const Matrix& M1, const Matrix& M2) {
 
 Matrix join(const Matrix& M1, const Matrix& M2, const int& axis) {
 
-	int r, c;
+	Matrix temp;
 
 	if(axis == 0) {
-		if(M1.c != M2.c) {
 
-			throw std::invalid_argument("Matrices should have identical number of columns");
+		// initialise output matrix
+		int r = M1.r + M2.r;
+		int c = M1.c;
+		temp = Matrix(r, c);
+
+		// loop over elements of temp, filling with the correct element of M1 or M2
+		for(int t=0; t<temp.l; ++t) {
+
+			temp.mp[t] = t < M1.l ? M1.mp[t] : M2.mp[t - M1.l];
 		}
-
-		c = M1.c;
-		r = M1.r + M2.r;
 	}
 
-	else if(axis == 1) {
-		if(M1.r != M2.r) {
+	else { // axis == 1
 
-			throw std::invalid_argument("Matrices should have identical number of rows");
-		}
+		// initialise output matrix
+		int r = M1.r;
+		int c = M1.c + M2.c;
+		temp = Matrix(r, c);
 
-		c = M1.c + M2.c;
-		r = M1.r;
-	}
-
-	else {
-		throw std::invalid_argument("axis must be equal to 0 or 1");
-	}
-
-	Matrix temp(r, c);
-
-	if(axis == 1) {
-
+		// loop over elements of temp, filling with the correct element of M1 or M2
 		for(int t=0; t<temp.l; ++t) {
 
 			temp.mp[t] = t%c < M1.c ? M1.mp[t - t/c * M2.c] : M2.mp[t - (t/c + 1) * M1.c];
 		}
-
-		return temp;
-	}
-
-	int cr = -1; // current row
-
-	for(int t=0; t < M1.l; ++t) {
-
-		if(t % M1.c == 0) {
-
-			++cr;
-		}
-
-		temp.mp[t + cr*M1.c] = M1.mp[t];
-	}
-
-	cr = -1; // current row
-
-	for(int t=0; t < M2.l; ++t) {
-
-		if(t % M2.c == 0) {
-
-			++cr;
-		}
-
-		temp.mp[t + cr*(M2.c - 1) + M1.c] = M2.mp[t];
-
-	}
-
-	return temp;
-}
-
-Matrix join(const std::vector<Matrix*>& Ms, const int& axis) {
-
-	int r = 0;
-	int c = 0;
-
-	if(axis == 0) {
-
-		for(auto X : Ms) {
-
-			if(X->l != Ms[0]->l) {
-				throw std::invalid_argument("Matrices should have identical number of columns");
-			}
-
-			r += X->r;
-		}
-
-		c = Ms[0]->c;
-	}
-
-	else if(axis == 1) {
-
-		for(auto X : Ms) {
-			
-			if(X->l != Ms[0]->l) {
-				throw std::invalid_argument("Matrices should have identical number of columns");
-			}
-
-			c += X->c;
-		}
-
-		r = Ms[0]->r;
-	}
-
-	else {
-		throw std::invalid_argument("axis must be equal to 0 or 1");
-	}
-
-	Matrix temp(r, c);
-
-	int c_sum = 0; // sum of columns for offset in array
-
-	for(auto X : Ms) {
-
-		int cr = -1; // current row
-
-		for(int t=0; t < X->l; ++t) {
-
-			if(t % X->c == 0) {
-
-				++cr;
-			}
-
-			temp.mp[t + cr*(temp.c - 1) + c_sum] = X->mp[t];
-		}
-
-		c_sum += X->c;
 	}
 
 	return temp;
@@ -844,55 +762,90 @@ double dot(const Matrix& V1, const Matrix& V2) {
 	return temp;
 }
 
-Matrix eigenvalues(Matrix& M) {
-
-	// approximate eigenvalues of M if M is square
-
-	// stores output matrix
-	Matrix temp(M.r, M.c);
-	Matrix eigenMatrix = eigenvectors(M);
-	Matrix u1 = eigenMatrix.slice(0,0,2,1);
-	Matrix u2 = eigenMatrix.slice(0,1,2,2);
-
-	temp.mp[0] = (M * u1).mp[0] / u1.mp[0];
-	temp.mp[1] = 0;
-	temp.mp[2] = 0;
-	temp.mp[3] = (M * u2).mp[0] / u2.mp[0];
-
-	return temp;
-}
-
-Matrix eigenvectors(Matrix& M) {
+Matrix eigenvectors(const Matrix& M) {
 
 	// approximate eigenvectors of M if M is square
+	// expensive function
 
 	// stores output matrix
 	Matrix temp;
 	Matrix inverse = M.inv();
 
-	Matrix u1(M.r, 1);
-	Matrix u2(M.r, 1);
-	Matrix u3(M.r, 1);
-	u1.randomise(0.0f, 1.0f);
-	u2.randomise(0.0f, 1.0f);
-	u3.randomise(0.0f, 1.0f);
+	// randomise min and max eigenvectors initially
+	Matrix umax(M.r, 1);
+	Matrix umin(M.r, 1);
+	umax.randomise(0.0f, 1.0f);
+	umin.randomise(0.0f, 1.0f);
 
-	for(int t=0; t<20; t++) {
+	// iteration to bring random vector toward max eigenvector
+	for(int t=0; t<50; t++) {
 		
-		u1 = (M * u1).normalised();
+		umax = (M * umax).normalised();
 	}
 
-	for(int t=0; t<20; t++) {
+	// get eigenvalue
+	double lmax = (M * umax).mp[0] / umax.mp[0];
+
+	// iteration to bring random vector toward min eigenvector
+	for(int t=0; t<50; t++) {
 		
-		u2 = (inverse * u2).normalised();
+		umin = (inverse * umin).normalised();
 	}
 
-	u1 = u1 / u1.mp[0];
-	u2 = u2 / u2.mp[0];
+	umax = umax / umax.mp[0];
+	umin = umin / umin.mp[0];
 
-	return join(u1, u2, 1);
+	// get eigenvalue
+	double lmin = (M * umin).mp[0] / umin.mp[0];
+
+	temp = umin;
+
+	for(int t=0; t<M.c-2; ++t) {
+
+		// guess eigenvalue - interpolate between lmax and lmin
+		double lguess = lmin + (lmax - lmin) * (float)(t+1) / (float)(M.c-1);
+		Matrix ident = Matrix(M.r, M.c);
+		ident.identity();
+
+		// modified matrix to use to approach eigenvalue
+		Matrix Mmod = (lguess * ident - M).inv();
+
+		// eigenvector - start random
+		Matrix u(M.r, 1);
+		u.randomise(0, 1);
+
+		// iterate to get eigenvector
+		for(int t=0; t<50; t++) {
+		
+			u = (Mmod * u).normalised();
+		}
+
+		// fix u to have first element 1 and join to temp
+		u = u / u.mp[0];
+		temp = join(temp, u, 1);
+	}
+
+	// join umax to temp and return
+	return join(temp, umax, 1);
 }
 
+Matrix eigenvalues(const Matrix& M, const Matrix& eigM) {
+
+	// get eigenvalues from matrix and eigenvectors matrix
+
+	// stores output matrix
+	Matrix temp(eigM.r, eigM.c);
+	temp.identity();
+
+	// loop over diagonal elements of temp, filling them with the eigenvalues
+	for(int t=0; t<temp.c; ++t) {
+	
+		Matrix u = eigM.slice(0, t, eigM.r, t+1);
+		temp(t, t) = (M * u).mp[0] / u.mp[0];
+	}
+
+	return temp;
+}
 
 Matrix cross(const Matrix& V1, const Matrix& V2) {
 
