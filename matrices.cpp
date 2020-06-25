@@ -166,7 +166,7 @@ Matrix Matrix::inv() const {
 
 	for(int t=0; t<l; ++t) {
 
-		temp.mp[t] = (-t%2 * 2 + 1)/determinant * transpose.minor(t).det();
+		temp.mp[t] = ( (t + (c%2==0 ? t/c : 0))%2 * -2 + 1 )/determinant * transpose.minor(t).det();
 	}
 
 	return temp;
